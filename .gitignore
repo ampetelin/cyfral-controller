@@ -146,4 +146,4 @@ cython_debug/
 ### Project
 
 # Settings
-settings.py
+src/settings.py

@@ -26,6 +26,11 @@ class SoundMode:
     AUDIBLE = 2
 
 
+class AutoOpenMode:
+    DISABLED = 0
+    ENABLED = 1
+
+
 class IntercomState:
     """Состояние домофона"""
     WAITING_CALL = 1
@@ -45,6 +50,7 @@ class CyfralController:
                  mqtt_client: MQTTClient,
                  mqtt_incoming_call_state_topic: str,
                  mqtt_sound_mode_state_topic: str,
+                 mqtt_auto_open_mode_topic: str,
                  mqtt_control_topic: str,
                  real_time_clock: DS1307):
         """Инициализирует атрибуты объекта CyfralController"""
@@ -62,12 +68,16 @@ class CyfralController:
         self._unmute_time = Time(hour=3)
         self._mute_time = Time(hour=18)
 
+        self._auto_open_mode = AutoOpenMode.DISABLED
+        self._auto_open_mode_timer = machine.Timer(-1)
+
         self._mqtt_client = mqtt_client
         self._mqtt_connected = False
         self._mqtt_keepalive_timer = machine.Timer(-1)
         self._mqtt_control_topic = mqtt_control_topic
         self._mqtt_incoming_call_state_topic = mqtt_incoming_call_state_topic
         self._mqtt_sound_mode_state_topic = mqtt_sound_mode_state_topic
+        self._mqtt_auto_open_mode_topic = mqtt_auto_open_mode_topic
 
     def run(self):
         """Основной цикл контроллера"""
@@ -97,6 +107,8 @@ class CyfralController:
                 if not self._intercom_state == IntercomState.WAITING_CALL:
                     if incoming_call:
                         self._incoming_call_time = time.ticks_ms()
+                        if self._auto_open_mode:
+                            self.open_door()
                     else:
                         incoming_call_time_diff = time.ticks_diff(time.ticks_ms(), self._incoming_call_time) // 1000
                         if incoming_call_time_diff >= 5:
@@ -215,7 +227,7 @@ class CyfralController:
         return SoundMode.SILENT
 
     def _auto_sound_mode_setting_callback(self, timer):
-        """Автоматическая настройка звукового режима относительно текущего времени"""
+        """Коллбэк автоматической настройки звукового режима относительно текущего времени"""
         determined_sound_mode = self._determine_sound_mode()
         if determined_sound_mode == self._sound_mode:
             return
@@ -227,11 +239,27 @@ class CyfralController:
 
     def _enable_auto_sound_mode(self):
         """Включает автоматическое определение звукового режима"""
-        self._sound_mode_switch_timer.init(period=300000, callback=self._auto_sound_mode_setting_callback)
+        self._sound_mode_switch_timer.init(period=5 * 60000, callback=self._auto_sound_mode_setting_callback)
 
     def _disable_auto_sound_mode(self):
         """Отключает автоматическое определение звукового режима"""
         self._sound_mode_switch_timer.deinit()
+
+    def _auto_open_mode_callback(self, timer):
+        """Коллбэк отключения режима автоматического открытия двери"""
+        self._disable_auto_sound_mode()
+
+    def _enable_auto_open_mode(self):
+        """Включает автоматическое открытие двери"""
+        self._auto_open_mode = AutoOpenMode.ENABLED
+        self._auto_open_mode_timer.init(period=30 * 60000, callback=self._auto_open_mode_callback)
+        self._publish_mqtt_message(self._mqtt_auto_open_mode_topic, 'ON')
+
+    def _disable_auto_open_mode(self):
+        """Отключает автоматическое открытие двери"""
+        self._auto_open_mode = AutoOpenMode.DISABLED
+        self._auto_open_mode_timer.deinit()
+        self._publish_mqtt_message(self._mqtt_auto_open_mode_topic, 'OFF')
 
     def _mqtt_callback(self, _, message):
         """Обратный вызов MQTT подписки"""
@@ -240,6 +268,8 @@ class CyfralController:
             'REJECT_CALL': self.reject_call,
             'MUTE_SOUND': self.mute,
             'UNMUTE_SOUND': self.unmute,
+            'ENABLE_AUTO_OPEN': self._enable_auto_open_mode,
+            'DISABLE_AUTO_OPEN': self._disable_auto_open_mode,
         }
 
         message = message.decode()
@@ -268,6 +298,8 @@ class CyfralController:
             self._publish_mqtt_message(self._mqtt_sound_mode_state_topic, 'ON')
         else:
             self._publish_mqtt_message(self._mqtt_sound_mode_state_topic, 'OFF')
+
+        self._publish_mqtt_message(self._mqtt_auto_open_mode_topic, 'OFF')
 
     def _subscribe_to_topic(self, topic_name):
         """Подписывается на MQTT топик"""

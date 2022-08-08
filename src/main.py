@@ -78,6 +78,7 @@ if __name__ == '__main__':
         mqtt_client=mqtt_client,
         mqtt_incoming_call_state_topic=settings.MQTT_INCOMING_CALL_STATE_TOPIC,
         mqtt_sound_mode_state_topic=settings.MQTT_SOUND_MODE_STATE_TOPIC,
+        mqtt_auto_open_mode_topic=settings.MQTT_AUTO_OPEN_MODE_TOPIC,
         mqtt_control_topic=settings.MQTT_CONTROL_TOPIC,
         real_time_clock=external_rtc
     )
