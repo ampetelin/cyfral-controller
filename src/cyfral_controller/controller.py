@@ -1,8 +1,9 @@
 import time
-
 import machine
+from datetime import Time
 from umqtt.simple import MQTTClient
 
+from cyfral_controller.electronic_components.clock import DS1307
 from cyfral_controller.electronic_components.relays import (
     Relay,
     ControlOptocoupler,
@@ -15,9 +16,7 @@ from cyfral_controller.exceptions import (
     HangUpHandsetError,
     PressOpenDoorButtonError
 )
-from datetime import Time
-from modules.ds1307 import DS1307
-from utils import blinks
+from cyfral_controller.utils import blinks
 
 
 class SoundMode:
@@ -27,6 +26,7 @@ class SoundMode:
 
 
 class AutoOpenMode:
+    """Режим автоматического открытия двери"""
     DISABLED = 0
     ENABLED = 1
 
@@ -247,7 +247,7 @@ class CyfralController:
 
     def _auto_open_mode_callback(self, timer):
         """Коллбэк отключения режима автоматического открытия двери"""
-        self._disable_auto_sound_mode()
+        self._disable_auto_open_mode()
 
     def _enable_auto_open_mode(self):
         """Включает автоматическое открытие двери"""
