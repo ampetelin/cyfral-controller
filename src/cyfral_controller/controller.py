@@ -98,22 +98,27 @@ class CyfralController:
                     self._subscribe_to_topic(self._mqtt_control_topic)
                     self._mqtt_components_state_initialization()
             else:
-                incoming_call = self._incoming_call
-
-                if self._intercom_state == IntercomState.WAITING_CALL and incoming_call:
-                    self._intercom_state = IntercomState.INCOMING_CALL
-                    self._publish_mqtt_message(self._mqtt_incoming_call_state_topic, 'ON')
-
-                if not self._intercom_state == IntercomState.WAITING_CALL:
-                    if incoming_call:
+                if self._incoming_call:
+                    if self._intercom_state == IntercomState.WAITING_CALL:
+                        self._intercom_state = IntercomState.INCOMING_CALL
                         self._incoming_call_time = time.ticks_ms()
-                        if self._auto_open_mode:
-                            self.open_door()
+                        self._publish_mqtt_message(self._mqtt_incoming_call_state_topic, 'ON')
                     else:
+                        self._incoming_call_time = time.ticks_ms()
+                else:
+                    if not self._intercom_state == IntercomState.WAITING_CALL:
                         incoming_call_time_diff = time.ticks_diff(time.ticks_ms(), self._incoming_call_time) // 1000
                         if incoming_call_time_diff >= 5:
                             self._intercom_state = IntercomState.WAITING_CALL
                             self._publish_mqtt_message(self._mqtt_incoming_call_state_topic, 'OFF')
+
+                if self._intercom_state == IntercomState.INCOMING_CALL and self._auto_open_mode == AutoOpenMode.ENABLED:
+                    try:
+                        time.sleep_ms(3000)
+                        self.open_door()
+                    except CyfralControllerException as ex:
+                        print(f'Cyfral controller error: {ex}')
+                        blinks.error_blink()
 
                 self._check_mqtt_message()
 
