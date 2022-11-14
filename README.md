@@ -70,5 +70,5 @@ $ esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect 0
 
 ## Подключение к плате абонентской трубке
 <h2 align="center">
-    <a href="https://ibb.co/NCJqXdw"><img src="https://i.ibb.co/wgPqTFD/connection-diagram.png" alt="connection-diagram" border="0"></a>
+    <img src="https://res.cloudinary.com/cocktail-api/image/upload/v1668414822/cyfral-controller/connection-diagram_swmrme.png" alt="connection-diagram">
 </h2>
