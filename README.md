@@ -1,10 +1,11 @@
-<h1 align="center">
-    Cyfral Controller
-</h1>
+<h1 align="center">Cyfral Controller</h1>
 <p align="center">
     <em>контроллер управления абонентской трубкой домофона Цифрал КЛ-2 на базе WI-FI модуля ESP8266 (ESP-12F)</em>
-    <a href="https://ibb.co/K07HBCf"><img src="https://i.ibb.co/TvR5Jz7/logo.png" alt="logo" border="0"></a>
 </p>
+<p align="center">
+    <img src="https://res.cloudinary.com/cocktail-api/image/upload/v1668243575/cyfral-controller/logo_ndbt1l.png" alt="logo">
+</p>
+
 
 ---
 ## Конфигурация
@@ -34,6 +35,38 @@ MQTT_AUTO_OPEN_MODE_TOPIC = 'auto_open/state'
 MQTT_CONTROL_TOPIC = 'control'
 ```
 
+## Cборка
+1) Загрузить исходники <a href="https://github.com/micropython/micropython">MicroPython<a/>
+2) Проверить доступность подмодулей
+```bash
+$ make -C ports/esp8266 submodules
+```
+3) Скопировать содержимое каталога проекта ```src``` в ```ports/esp8266/modules```
+4) Скомпилировать кросс-компилятор MicroPython
+```bash
+$ docker run --rm -v $HOME:$HOME -u $UID -w $PWD larsks/esp-open-sdk make -C mpy-cross
+```
+5) Перейти в каталог ```ports/esp8266```
+6) Скомпилировать прошивку
+```bash
+$ docker run --rm -v $HOME:$HOME -u $UID -w $PWD larsks/esp-open-sdk make -j BOARD=GENERIC
+```
+
+см. <a href="https://github.com/micropython/micropython/blob/master/ports/esp8266/README.md">Официальная документация по сборке</a>
+
+## Прошивка
+1) Загрузить <a href="https://github.com/espressif/esptool/">esptool</a> или установить с помощью pip:
+```bash
+$ pip install esptool
+```
+2) Очистить флэш-память
+```bash
+$ esptool.py --port /dev/ttyUSB0 erase_flash
+```
+3) Загрузить прошивку
+```bash
+$ esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect 0 <your_firmware_name>.bin
+```
 
 ## Подключение к плате абонентской трубке
 <h2 align="center">
