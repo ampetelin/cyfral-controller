@@ -3,7 +3,7 @@
     <em>контроллер управления абонентской трубкой домофона Цифрал КЛ-2 на базе WI-FI модуля ESP8266 (ESP-12F)</em>
 </p>
 <p align="center">
-    <img src="https://res.cloudinary.com/cocktail-api/image/upload/v1668243575/cyfral-controller/logo_ndbt1l.png" alt="logo">
+    <img src="https://res.cloudinary.com/ampetelin/image/upload/v1668243575/cyfral-controller/logo_ndbt1l.png" alt="logo">
 </p>
 
 
@@ -70,5 +70,5 @@ $ esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=detect 0
 
 ## Подключение к плате абонентской трубке
 <h2 align="center">
-    <img src="https://res.cloudinary.com/cocktail-api/image/upload/v1668414822/cyfral-controller/connection-diagram_swmrme.png" alt="connection-diagram">
+    <img src="https://res.cloudinary.com/ampetelin/image/upload/v1668414822/cyfral-controller/connection-diagram_swmrme.png" alt="connection-diagram">
 </h2>
